@@ -1,111 +1,135 @@
 import React, { Component } from "react";
 import Helmet from "react-helmet";
-import { graphql } from "gatsby";
+import { graphql, StaticQuery } from "gatsby";
 import MDXRenderer from "gatsby-mdx/mdx-renderer";
-import styled, { injectGlobal } from "react-emotion";
+import { css } from "@emotion/core";
 import { Edit3 } from "react-feather";
 import { Layout, Link } from "$components";
 
-injectGlobal`
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+const forcedNavOrder = ["/getting-started", "/guides"];
 
-  html, body {
-    font-family: -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      "Roboto",
-      "Roboto Light",
-      "Oxygen",
-      "Ubuntu",
-      "Cantarell",
-      "Fira Sans",
-      "Droid Sans",
-      "Helvetica Neue",
-      sans-serif,
-      "Apple Color Emoji",
-      "Segoe UI Emoji",
-      "Segoe UI Symbol";
+const reduceNav = allMdx => {
+  return allMdx.edges
+    .map(({ node }) => node.fields.slug)
+    .filter(slug => slug !== "/")
+    .sort()
+    .reduce(
+      (acc, cur) => {
+        if (forcedNavOrder.find(url => url === cur)) {
+          return { ...acc, [cur]: [cur] };
+        }
 
-    font-size: 16px;
-  }
+        const prefix = cur.split("/")[1];
 
-  a {
-    transition: color 0.15s;
-    color: #663399;
-  }
-`;
+        if (prefix && forcedNavOrder.find(url => url === `/${prefix}`)) {
+          return { ...acc, [`/${prefix}`]: [...acc[`/${prefix}`], cur] };
+        } else {
+          return { ...acc, items: [...acc.items, cur] };
+        }
+      },
+      { items: [] }
+    );
+};
 
-const Edit = styled.div`
-  width: 100%;
-  margin: 4rem 0 2rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #ddd;
-  text-align: right;
+// Add an item node in the tree, at the right position
+function addToTree(node, treeNodes) {
+  // Check if the item node should inserted in a subnode
+  for (var i = 0; i < treeNodes.length; i++) {
+    const treeNode = treeNodes[i];
 
-  a {
-    text-decoration: none;
-    color: #555;
+    // "/store/travel".indexOf( '/store/' )
+    if (node.link.indexOf(treeNode.link + "/") == 0) {
+      addToTree(node, treeNode.items);
 
-    &:hover {
-      color: #663399;
+      // Item node was added, we can quit
+      return;
     }
   }
-`;
 
-export default class MDXRuntimeTest extends Component {
-  render() {
-    const { data } = this.props;
-    const {
-      mdx,
-      site: {
-        siteMetadata: { docsLocation }
-      }
-    } = data;
-
-    return (
-      <Layout {...this.props}>
-        <Helmet>
-          <title>{mdx.fields.title}</title>
-        </Helmet>
-        <h1 css={{ fontSize: `2.5rem`, marginBottom: `2rem` }}>
-          {mdx.fields.title}
-        </h1>
-        <MDXRenderer>{mdx.code.body}</MDXRenderer>
-        <Edit>
-          <Link to={`${docsLocation}/${mdx.parent.relativePath}`}>
-            <Edit3 size={16} /> edit this page on GitHub
-          </Link>
-        </Edit>
-      </Layout>
-    );
-  }
+  // Item node was not added to a subnode, so it's a sibling of these treeNodes
+  treeNodes.push({
+    title: node.title,
+    link: node.link,
+    items: []
+  });
 }
 
-export const pageQuery = graphql`
-  query($id: String!) {
-    site {
-      siteMetadata {
-        docsLocation
-      }
-    }
-    mdx(fields: { id: { eq: $id } }) {
-      fields {
-        id
-        title
-      }
-      code {
-        body
-      }
-      tableOfContents
-      parent {
-        ... on File {
-          relativePath
+//Create the item tree starting from menuItems
+function createTree(nodes) {
+  var tree = [];
+
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+    addToTree(node, tree);
+  }
+
+  return tree;
+}
+
+const reduceNavTwo = allMdx => {
+  const edges = allMdx.edges
+    .filter(({ node }) => node.fields.slug !== "/")
+    .map(({ node }) => ({
+      title: node.frontmatter.title,
+      link: node.fields.slug
+    }));
+  return createTree(edges);
+};
+
+export default ({ children, ...props }) => (
+  <StaticQuery
+    query={graphql`
+      query {
+        site {
+          siteMetadata {
+            docsLocation
+          }
+        }
+        allMdx {
+          edges {
+            node {
+              frontmatter {
+                title
+              }
+              fields {
+                slug
+              }
+            }
+          }
         }
       }
-    }
-  }
-`;
+    `}
+    render={({ site, allMdx }) => {
+      const itemList = reduceNavTwo(allMdx);
+      return (
+        <Layout {...props} itemList={itemList}>
+          <Helmet />
+          <h1 css={{ fontSize: `2.5rem`, marginBottom: `2rem` }} />
+          {children}
+          <div
+            css={{
+              width: "100%",
+              margin: "4rem 0 2rem",
+              padding: "1rem 1.5rem",
+              borderTop: "1px solid #ddd",
+              textAlign: "right"
+            }}
+          >
+            <Link
+              to={`${site.siteMetadata.docsLocation}`}
+              css={{
+                textDecoration: "none",
+                color: "#555",
+                "&:hover": {
+                  color: "#663399"
+                }
+              }}
+            >
+              <Edit3 size={16} /> edit this page on GitHub
+            </Link>
+          </div>
+        </Layout>
+      );
+    }}
+  />
+);
