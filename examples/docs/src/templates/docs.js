@@ -1,35 +1,11 @@
-import React, { Component } from "react";
+import React from "react";
 import Helmet from "react-helmet";
 import { graphql, StaticQuery } from "gatsby";
-import MDXRenderer from "gatsby-mdx/mdx-renderer";
-import { css } from "@emotion/core";
 import { Edit3 } from "react-feather";
 import { Layout, Link } from "$components";
 
-const forcedNavOrder = ["/getting-started", "/guides"];
-
-const reduceNav = allMdx => {
-  return allMdx.edges
-    .map(({ node }) => node.fields.slug)
-    .filter(slug => slug !== "/")
-    .sort()
-    .reduce(
-      (acc, cur) => {
-        if (forcedNavOrder.find(url => url === cur)) {
-          return { ...acc, [cur]: [cur] };
-        }
-
-        const prefix = cur.split("/")[1];
-
-        if (prefix && forcedNavOrder.find(url => url === `/${prefix}`)) {
-          return { ...acc, [`/${prefix}`]: [...acc[`/${prefix}`], cur] };
-        } else {
-          return { ...acc, items: [...acc.items, cur] };
-        }
-      },
-      { items: [] }
-    );
-};
+// force top-level navigation to be a certain order
+//const forcedNavOrder = ["/getting-started", "/guides"];
 
 // Add an item node in the tree, at the right position
 function addToTree(node, treeNodes) {
@@ -76,7 +52,7 @@ const reduceNavTwo = allMdx => {
   return createTree(edges);
 };
 
-export default ({ children, ...props }) => (
+const DocLayout = ({ children, ...props }) => (
   <StaticQuery
     query={graphql`
       query {
@@ -133,3 +109,5 @@ export default ({ children, ...props }) => (
     }}
   />
 );
+
+export default DocLayout;
