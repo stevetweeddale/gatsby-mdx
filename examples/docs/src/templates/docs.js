@@ -8,17 +8,14 @@ import { Layout, Link } from "$components";
 //const forcedNavOrder = ["/getting-started", "/guides"];
 
 // Add an item node in the tree, at the right position
-function addToTree(node, treeNodes) {
+function addToTree(treeNodes, node) {
   // Check if the item node should inserted in a subnode
   for (var i = 0; i < treeNodes.length; i++) {
     const treeNode = treeNodes[i];
 
     // "/store/travel".indexOf( '/store/' )
     if (node.link.indexOf(treeNode.link + "/") == 0) {
-      addToTree(node, treeNode.items);
-
-      // Item node was added, we can quit
-      return;
+      return addToTree(treeNode.items, node);
     }
   }
 
@@ -28,18 +25,33 @@ function addToTree(node, treeNodes) {
     link: node.link,
     items: []
   });
+
+  return treeNodes;
 }
 
-//Create the item tree starting from menuItems
+/**
+ * create the tree for navigation items. looks like this, where items
+ * is the same as the item shown. link and items are optional
+ *
+ * [{
+ *   title: 'Some Title',
+ *   link: '/maybe/some/link',
+ *   items: [...]
+ * }]
+ */
 function createTree(nodes) {
-  var tree = [];
+  //  var tree = [];
 
-  for (var i = 0; i < nodes.length; i++) {
-    var node = nodes[i];
+  // algo depends on shorter URLs being first in the list
+  return nodes
+    .sort((a, b) => a.link.split("/") - b.link.split("/"))
+    .reduce(addToTree, []);
+
+  /*forEach(node => {
     addToTree(node, tree);
-  }
+  });*/
 
-  return tree;
+  //  return tree;
 }
 
 const reduceNavTwo = allMdx => {
@@ -77,6 +89,7 @@ const DocLayout = ({ children, ...props }) => (
     `}
     render={({ site, allMdx }) => {
       const itemList = reduceNavTwo(allMdx);
+      console.log(itemList);
       return (
         <Layout {...props} itemList={itemList}>
           <Helmet />
