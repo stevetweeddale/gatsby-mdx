@@ -35,5 +35,8 @@
   "scripts": {
     "develop": "gatsby develop",
     "build": "gatsby build"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-do-expressions": "^7.2.0"
   }
 }

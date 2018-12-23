@@ -14,6 +14,9 @@ exports.onCreateBabelConfig = ({ actions }) => {
   actions.setBabelPlugin({
     name: "@babel/plugin-proposal-export-default-from"
   });
+  actions.setBabelPlugin({
+    name: "@babel/plugin-proposal-do-expressions"
+  });
 };
 
 exports.onCreateNode = ({ node, getNode, actions }) => {
