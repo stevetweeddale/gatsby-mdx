@@ -1,5 +1,4 @@
 import React from "react";
-import { Global, css, jsx } from "@emotion/core";
 import Highlight, { defaultProps } from "prism-react-renderer";
 import codeTheme from "prism-react-renderer/themes/duotoneLight";
 import { withTheme } from "emotion-theming";
@@ -9,12 +8,7 @@ const prismMap = {
   sh: "bash",
   shell: "bash"
 };
-export default withTheme(({ theme, is, children, lang = "markup", ...etc }) => {
-  const props = {
-    ...etc,
-    className: etc.className ? etc.className : `language-${lang}`
-  };
-
+export default withTheme(({ theme, is, children, lang = "markup" }) => {
   // if no `is` default to inline code
   if (!is) {
     return (
@@ -24,11 +18,11 @@ export default withTheme(({ theme, is, children, lang = "markup", ...etc }) => {
         code={children.trim()}
         language={lang}
       >
-        {({ className, style, tokens, getLineProps, getTokenProps }) => (
+        {({ className, style, tokens, /*getLineProps,*/ getTokenProps }) => (
           <code className={className} style={{ ...style, display: "inline" }}>
-            {tokens.map((line, i) =>
+            {tokens.map(line =>
               line.map((token, key) => (
-                <span {...getTokenProps({ token, key })} />
+                <span key="fake-key" {...getTokenProps({ token, key })} />
               ))
             )}
           </code>
@@ -40,7 +34,7 @@ export default withTheme(({ theme, is, children, lang = "markup", ...etc }) => {
   // live component rendering
   if (is === "react-live") {
     return (
-      <LiveProvider code={exampleCode}>
+      <LiveProvider code={children}>
         <LiveEditor />
         <LiveError />
         <LivePreview />
@@ -63,9 +57,9 @@ export default withTheme(({ theme, is, children, lang = "markup", ...etc }) => {
           css={{ overflow: "auto", padding: "1rem", marginTop: "1.5rem" }}
         >
           {tokens.map((line, i) => (
-            <div {...getLineProps({ line, key: i })}>
+            <div key="fake-key" {...getLineProps({ line, key: i })}>
               {line.map((token, key) => (
-                <span {...getTokenProps({ token, key })} />
+                <span key="fake-key" {...getTokenProps({ token, key })} />
               ))}
             </div>
           ))}

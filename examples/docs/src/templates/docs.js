@@ -66,7 +66,7 @@ const RawLayout = props => <div>{props.children}</div>;
 
 const DocLayout = ({ children, ...props }) =>
   props.location.pathname === "/" ? (
-    <RawLayout {...props} children={children} />
+    <RawLayout {...props}>{children}</RawLayout>
   ) : (
     <StaticQuery
       query={graphql`
@@ -92,7 +92,6 @@ const DocLayout = ({ children, ...props }) =>
       `}
       render={({ site, allMdx }) => {
         const itemList = reduceNavTwo(allMdx);
-        console.log(itemList);
         return (
           <Layout {...props} itemList={itemList}>
             <Helmet />

@@ -1,9 +1,9 @@
-const React = require("react");
-const { Global, css } = require("@emotion/core");
-const { ThemeProvider } = require("emotion-theming");
+import React from "react";
+import { Global, css } from "@emotion/core";
+import { ThemeProvider } from "emotion-theming";
 import mdxComponents from "./src/components/mdxComponents";
-const { MDXProvider } = require("@mdx-js/tag");
-console.log(mdxComponents);
+import { MDXProvider } from "@mdx-js/tag";
+
 export const universalWrapRootElement = ({ element }) => (
   <ThemeProvider theme={{}}>
     <MDXProvider components={mdxComponents}>

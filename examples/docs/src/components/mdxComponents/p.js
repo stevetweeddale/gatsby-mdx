@@ -1,3 +1,4 @@
+import React from "react";
 import { css } from "@emotion/core";
 
 const lineHeight = 1.5;
