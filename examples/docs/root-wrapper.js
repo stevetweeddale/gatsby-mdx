@@ -3,9 +3,14 @@ import { Global, css } from "@emotion/core";
 import { ThemeProvider } from "emotion-theming";
 import mdxComponents from "./src/components/mdxComponents";
 import { MDXProvider } from "@mdx-js/tag";
+import { color } from "./src/components/color";
 
 export const universalWrapRootElement = ({ element }) => (
-  <ThemeProvider theme={{}}>
+  <ThemeProvider
+    theme={{
+      color
+    }}
+  >
     <MDXProvider components={mdxComponents}>
       <Global
         styles={css`
@@ -23,6 +28,9 @@ export const universalWrapRootElement = ({ element }) => (
               "Segoe UI Emoji", "Segoe UI Symbol";
 
             font-size: 16px;
+          }
+          a {
+            color: ${color.mdx};
           }
         `}
       />
