@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const babel = require("@babel/core");
 
 const defaultOptions = require("../utils/default-options");
 const createMDXNode = require("../utils/create-mdx-node");
@@ -67,7 +68,8 @@ module.exports = async (
     scopeIdentifiers,
     scopeImports,
     createContentDigest: contentDigest,
-    directory: store.getState().program.directory
+    directory: store.getState().program.directory,
+    parentNode: node
   });
 };
 
@@ -75,12 +77,26 @@ async function cacheScope({
   scopeImports,
   scopeIdentifiers,
   createContentDigest,
-  directory
+  directory,
+  parentNode
 }) {
   // scope files are the imports from an MDX file pulled out and re-exported.
-  const scopeFileContent = `${scopeImports.join("\n")}
+  let scopeFileContent = `${scopeImports.join("\n")}
 
 export default { ${scopeIdentifiers.join(", ")} }`;
+
+  // if parent node is a file, convert relative imports to be
+  // relative to new .cache location
+  if (parentNode.internal.type === "File") {
+    const instance = new BabelPluginTransformRelativeImports({
+      parentFilepath: parentNode.dir
+    });
+    const result = babel.transform(scopeFileContent, {
+      configFile: false,
+      plugins: [instance.plugin]
+    });
+    scopeFileContent = result.code;
+  }
 
   const filePath = path.join(
     directory,
@@ -89,4 +105,32 @@ export default { ${scopeIdentifiers.join(", ")} }`;
   );
 
   fs.writeFileSync(filePath, scopeFileContent);
+}
+
+const declare = require("@babel/helper-plugin-utils").declare;
+
+class BabelPluginTransformRelativeImports {
+  constructor({ parentFilepath }) {
+    this.plugin = declare(api => {
+      api.assertVersion(7);
+
+      return {
+        visitor: {
+          StringLiteral({ node }) {
+            try {
+              require.resolve(node.value);
+            } catch (e) {
+              const valueAbsPath = path.resolve(parentFilepath, node.value);
+              const replacementPath = path.relative(
+                MDX_SCOPES_LOCATION,
+                valueAbsPath
+              );
+              node.value = replacementPath;
+            }
+            //            path.traverse({});
+          }
+        }
+      };
+    });
+  }
 }
