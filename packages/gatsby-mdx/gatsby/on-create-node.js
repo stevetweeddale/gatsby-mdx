@@ -117,9 +117,7 @@ class BabelPluginTransformRelativeImports {
       return {
         visitor: {
           StringLiteral({ node }) {
-            try {
-              require.resolve(node.value);
-            } catch (e) {
+            if (node.value.startsWith(".")) {
               const valueAbsPath = path.resolve(parentFilepath, node.value);
               const replacementPath = path.relative(
                 MDX_SCOPES_LOCATION,
