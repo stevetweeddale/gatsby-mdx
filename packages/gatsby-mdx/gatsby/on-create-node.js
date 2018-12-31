@@ -125,7 +125,6 @@ class BabelPluginTransformRelativeImports {
               );
               node.value = replacementPath;
             }
-            //            path.traverse({});
           }
         }
       };
