@@ -37,7 +37,7 @@ module.exports = async function getSourcePluginsAsRemarkPlugins({
       };
   }
 
-  if (process.env.NODE_ENV !== `production` || !fileNodes) {
+  if (true || process.env.NODE_ENV !== `production` || !fileNodes) {
     fileNodes = getNodes().filter(n => n.internal.type === `File`);
   }
 
